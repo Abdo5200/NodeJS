@@ -11,3 +11,4 @@ console.log(path.resolve("/folder1", "folder", "index.html"));
 console.log(path.resolve("/folder1", "//folder", "index.html"));
 console.log(path.resolve("/folder1", "//folder", "../index.html"));
 console.log(path.resolve(__dirname, "index.html"));
+console.log("that's the end");
