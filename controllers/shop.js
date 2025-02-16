@@ -1,5 +1,6 @@
 const Product = require("../models/product");
 const cart = require("../models/cart");
+const express = require("express");
 
 exports.getProducts = (req, res, next) => {
   Product.findAll()
@@ -29,6 +30,7 @@ exports.getProduct = (req, res, next) => {
   //     });
   //   })
   //   .catch((err) => console.log(err));
+
   Product.findByPk(prodId)
     .then((product) => {
       res.render("shop/product-detail", {
@@ -53,34 +55,60 @@ exports.getIndex = (req, res, next) => {
       console.log(err);
     });
 };
-
+/** @param {express.Request} req */
 exports.getCart = (req, res, next) => {
-  cart.getCart((cart) => {
-    Product.fetchAll((products) => {
-      const cartProducts = [];
-      for (let product of products) {
-        const cartProductData = cart.products.find(
-          (prod) => prod.id === product.id
-        );
-        if (cartProductData) {
-          cartProducts.push({ productData: product, qty: cartProductData.qty });
-        }
-      }
-      res.render("shop/cart", {
-        path: "/cart",
-        pageTitle: "Your Cart",
-        products: cartProducts,
-      });
+  req.user
+    .getCart()
+    .then((cart) => {
+      return cart
+        .getProducts()
+        .then((products) => {
+          res.render("shop/cart", {
+            path: "/cart",
+            pageTitle: "Your Cart",
+            products: products,
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    })
+    .catch((err) => {
+      console.log(err);
     });
-  });
 };
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findById(prodId, (product) => {
-    cart.addProduct(prodId, product.price);
-  });
-  res.redirect("/cart");
+  let fetchedCart;
+  req.user
+    .getCart()
+    .then((cart) => {
+      fetchedCart = cart;
+      return cart.getProducts({ where: { id: prodId } });
+    })
+    .then(async (products) => {
+      let product;
+      if (products.length > 0) product = products[0];
+      let newQty = 1;
+      if (product) {
+        //?some code will go here
+      }
+      try {
+        const product_1 = await Product.findByPk(prodId);
+        return fetchedCart.addProduct(product_1, {
+          through: { quantity: newQty },
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    })
+    .then(() => {
+      res.redirect("/cart");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 exports.postCartDelteItem = (req, res, next) => {
