@@ -1,5 +1,5 @@
 const Product = require("../models/product");
-const cart = require("../models/cart");
+const Order = require("../models/order");
 const express = require("express");
 
 exports.getProducts = (req, res, next) => {
@@ -55,7 +55,6 @@ exports.getIndex = (req, res, next) => {
       console.log(err);
     });
 };
-/** @param {express.Request} req */
 exports.getCart = (req, res, next) => {
   req.user
     .getCart()
@@ -81,6 +80,7 @@ exports.getCart = (req, res, next) => {
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId;
   let fetchedCart;
+  let newQty = 1;
   req.user
     .getCart()
     .then((cart) => {
@@ -90,18 +90,17 @@ exports.postCart = (req, res, next) => {
     .then(async (products) => {
       let product;
       if (products.length > 0) product = products[0];
-      let newQty = 1;
       if (product) {
-        //?some code will go here
+        let oldQty = product.cartItem.quantity;
+        newQty = oldQty + 1;
+        return product;
       }
-      try {
-        const product_1 = await Product.findByPk(prodId);
-        return fetchedCart.addProduct(product_1, {
-          through: { quantity: newQty },
-        });
-      } catch (err) {
-        console.log(err);
-      }
+      return Product.findByPk(prodId);
+    })
+    .then((product) => {
+      return fetchedCart.addProduct(product, {
+        through: { quantity: newQty },
+      });
     })
     .then(() => {
       res.redirect("/cart");
@@ -113,11 +112,41 @@ exports.postCart = (req, res, next) => {
 
 exports.postCartDelteItem = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findById(prodId, (product) => {
-    console.log("here");
-    cart.deleteProduct(prodId, product.price);
-    res.redirect("/cart");
-  });
+  req.user
+    .getCart()
+    .then((cart) => {
+      return cart.getProducts({ where: { id: prodId } });
+    })
+    .then((products) => {
+      let product = products[0];
+      return product.cartItem.destroy();
+    })
+    .then((result) => {
+      res.redirect("/cart");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+
+/** @param {express.Request} req */
+exports.postOrder = (req, res, next) => {
+  req.user
+    .getCart()
+    .then((cart) => {
+      return cart.getProducts();
+    })
+    .then((products) => {
+      return req.user
+        .createOrder()
+        .then()
+        .catch((err) => {
+          console.log(err);
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 exports.getOrders = (req, res, next) => {
