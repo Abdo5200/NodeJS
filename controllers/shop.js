@@ -132,10 +132,3 @@ exports.getOrders = async (req, res, next) => {
     console.log(err);
   }
 };
-
-// exports.getCheckout = (req, res, next) => {
-//   res.render("shop/checkout", {
-//     path: "/checkout",
-//     pageTitle: "Checkout",
-//   });
-// };
