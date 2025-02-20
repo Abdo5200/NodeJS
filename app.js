@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 
 const errorController = require("./controllers/error");
 
-// const User = require("./models/user");
+const User = require("./models/user");
 
 const app = express();
 
@@ -31,15 +31,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
-  // User.findByPk(1)
-  //   .then((user) => {
-  //     req.user = user;
-  //     next();
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  //   });
-  next();
+  User.findById("67b77d80dfea294bc9892f98")
+    .then((user) => {
+      req.user = user;
+      next();
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 app.use("/admin", adminRoutes);
@@ -51,7 +50,7 @@ mongoConnection(() => {
   app.listen(3000);
 });
 
-//!this for mysql connection
+//!this was for mysql connection
 // Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
 // User.hasMany(Product);
 

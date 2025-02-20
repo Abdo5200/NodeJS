@@ -1,3 +1,4 @@
+const { CURSOR_FLAGS } = require("mongodb");
 const Product = require("../models/product");
 // const Order = require("../models/order");
 const express = require("express");
@@ -18,6 +19,7 @@ exports.getProducts = async (req, res, next) => {
 exports.getProduct = async (req, res, next) => {
   //? we can use findAll to return an array of products that meets some criteria
   //? but in this case it will return one item
+  const prodId = req.params.productId;
   // Product.findAll({ where: { id: prodId } })
   //   .then((products) => {
   //     res.render("shop/product-detail", {
@@ -40,6 +42,18 @@ exports.getProduct = async (req, res, next) => {
   // } catch (err) {
   //   console.log(err);
   // }
+  //*this is with mongo
+  try {
+    const product = await Product.fetchProduct(prodId);
+    res.render("shop/product-detail", {
+      //product is an array with one object with a unique id and we want to return one object so [0]
+      product: product,
+      pageTitle: product.title,
+      path: "/products",
+    });
+  } catch (err) {
+    console.log(err);
+  }
 };
 exports.getIndex = async (req, res, next) => {
   try {

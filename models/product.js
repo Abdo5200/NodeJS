@@ -1,17 +1,29 @@
+const mongodb = require("mongodb");
+
 /** @param{express.Request} req */
 const getDB = require("../util/database").getDB;
 class Product {
-  constructor(title, price, description, imageUrl) {
+  constructor(title, price, description, imageUrl, id, userId) {
     this.title = title;
     this.price = price;
     this.description = description;
     this.imageUrl = imageUrl;
+    this._id = id ? new mongodb.ObjectId(id) : null;
+    this.userId = userId;
   }
   async save() {
     try {
       const db = getDB();
-      const savedProduct = await db.collection("products").insertOne(this);
-      console.log(savedProduct);
+      let savedProduct;
+      if (this._id) {
+        //update
+        savedProduct = await db
+          .collection("products")
+          .updateOne({ _id: this._id }, { $set: this });
+      } else {
+        //create
+        savedProduct = await db.collection("products").insertOne(this);
+      }
       return savedProduct;
     } catch (err) {
       console.log(err);
@@ -20,8 +32,32 @@ class Product {
   static async fetchAll() {
     const db = getDB();
     const products = await db.collection("products").find().toArray();
-    console.log(products);
+    // console.log(products);
     return products;
+  }
+  static async fetchProduct(prodId) {
+    try {
+      const db = getDB();
+      const product = await db
+        .collection("products")
+        .find({ _id: new mongodb.ObjectId(prodId) })
+        .next();
+      return product;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  static async deleteById(prodId) {
+    try {
+      const db = getDB();
+      const product = await db
+        .collection("products")
+        .deleteOne({ _id: new mongodb.ObjectId(prodId) });
+      console.log("Deleted");
+      return product;
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
 
