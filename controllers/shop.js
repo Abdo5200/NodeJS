@@ -67,40 +67,62 @@ exports.getIndex = async (req, res, next) => {
     console.log(err);
   }
 };
-// exports.getCart = async (req, res, next) => {
-//   try {
-//     const cart = await req.user.getCart();
-//     const products = await cart.getProducts();
-//     res.render("shop/cart", {
-//       path: "/cart",
-//       pageTitle: "Your Cart",
-//       products: products,
-//     });
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+exports.getCart = async (req, res, next) => {
+  try {
+    const products = await req.user.getCart();
+    res.render("shop/cart", {
+      path: "/cart",
+      pageTitle: "Your Cart",
+      products: products,
+    });
+  } catch (err) {
+    console.log(err);
+  }
 
-// exports.postCart = async (req, res, next) => {
-//   const prodId = req.body.productId;
-//   let fetchedCart;
-//   let newQty = 1;
-//   try {
-//     fetchedCart = await req.user.getCart();
-//     const products = await fetchedCart.getProducts({ where: { id: prodId } });
-//     let product;
-//     if (products.length > 0) product = products[0];
-//     if (product) {
-//       product = products[0];
-//       let oldQty = product.cartItem.quantity;
-//       newQty = oldQty + 1;
-//     } else product = await Product.findByPk(prodId);
-//     await fetchedCart.addProduct(product, { through: { quantity: newQty } });
-//     res.redirect("/cart");
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+  //*this was for sequelize
+  // try {
+  //   const cart = await req.user.getCart();
+  //   const products = await cart.getProducts();
+  //   res.render("shop/cart", {
+  //     path: "/cart",
+  //     pageTitle: "Your Cart",
+  //     products: products,
+  //   });
+  // } catch (err) {
+  //   console.log(err);
+  // }
+};
+
+exports.postCart = async (req, res, next) => {
+  const prodId = req.body.productId;
+  try {
+    const product = await Product.fetchProduct(prodId);
+    const addedProduct = await req.user.addToCart(product);
+    console.log(addedProduct);
+    res.redirect("/cart");
+  } catch (err) {
+    console.log(err);
+  }
+
+  //*this was for sequelize
+  // let fetchedCart;
+  // let newQty = 1;
+  // try {
+  //   fetchedCart = await req.user.getCart();
+  //   const products = await fetchedCart.getProducts({ where: { id: prodId } });
+  //   let product;
+  //   if (products.length > 0) product = products[0];
+  //   if (product) {
+  //     product = products[0];
+  //     let oldQty = product.cartItem.quantity;
+  //     newQty = oldQty + 1;
+  //   } else product = await Product.findByPk(prodId);
+  //   await fetchedCart.addProduct(product, { through: { quantity: newQty } });
+  //   res.redirect("/cart");
+  // } catch (err) {
+  //   console.log(err);
+  // }
+};
 
 // exports.postCartDelteItem = async (req, res, next) => {
 //   const prodId = req.body.productId;
