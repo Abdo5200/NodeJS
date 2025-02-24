@@ -124,47 +124,75 @@ exports.postCart = async (req, res, next) => {
   // }
 };
 
-// exports.postCartDelteItem = async (req, res, next) => {
-//   const prodId = req.body.productId;
-//   try {
-//     const cart = await req.user.getCart();
-//     const products = await cart.getProducts({ where: { id: prodId } });
-//     const product = products[0];
-//     await product.cartItem.destroy();
-//     res.redirect("/cart");
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+exports.postCartDelteItem = async (req, res, next) => {
+  try {
+    const prodId = req.body.productId;
+    await req.user.deleteCartItem(prodId);
+    res.redirect("/cart");
+  } catch (err) {
+    console.log(err);
+  }
 
-// exports.postOrder = async (req, res, next) => {
-//   try {
-//     const cart = await req.user.getCart();
-//     let fetchedCart = cart;
-//     const products = await cart.getProducts();
-//     const order = await req.user.createOrder();
-//     await order.addProducts(
-//       products.map((product) => {
-//         product.orderItemn = { quantity: product.cartItem.quantity };
-//         return product;
-//       })
-//     );
-//     await fetchedCart.setProducts(null);
-//     res.redirect("/orders");
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+  //*this was for sequelize
+  // const prodId = req.body.productId;
+  // try {
+  //   const cart = await req.user.getCart();
+  //   const products = await cart.getProducts({ where: { id: prodId } });
+  //   const product = products[0];
+  //   await product.cartItem.destroy();
+  //   res.redirect("/cart");
+  // } catch (err) {
+  //   console.log(err);
+  // }
+};
 
-// exports.getOrders = async (req, res, next) => {
-//   try {
-//     const orders = await req.user.getOrders({ include: ["products"] });
-//     res.render("shop/orders", {
-//       path: "/orders",
-//       pageTitle: "Your Orders",
-//       orders: orders,
-//     });
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+exports.postOrder = async (req, res, next) => {
+  try {
+    await req.user.addOrder();
+    res.redirect("/orders");
+  } catch (err) {
+    console.log(err);
+  }
+  //*this was for sequelize
+  // try {
+  //   const cart = await req.user.getCart();
+  //   let fetchedCart = cart;
+  //   const products = await cart.getProducts();
+  //   const order = await req.user.createOrder();
+  //   await order.addProducts(
+  //     products.map((product) => {
+  //       product.orderItemn = { quantity: product.cartItem.quantity };
+  //       return product;
+  //     })
+  //   );
+  //   await fetchedCart.setProducts(null);
+  //   res.redirect("/orders");
+  // } catch (err) {
+  //   console.log(err);
+  // }
+};
+
+exports.getOrders = async (req, res, next) => {
+  try {
+    const orders = await req.user.getOrders();
+    res.render("shop/orders", {
+      path: "/orders",
+      pageTitle: "Your Orders",
+      orders: orders,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+
+  //*this was for sequelize
+  // try {
+  //   const orders = await req.user.getOrders({ include: ["products"] });
+  //   res.render("shop/orders", {
+  //     path: "/orders",
+  //     pageTitle: "Your Orders",
+  //     orders: orders,
+  //   });
+  // } catch (err) {
+  //   console.log(err);
+  // }
+};

@@ -30,15 +30,27 @@ const mongoConnection = require("./util/database").mongoConnection;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use((req, res, next) => {
-  User.findById("67b77d80dfea294bc9892f98")
-    .then((user) => {
-      req.user = new User(user.name, user.email, user.cart, user._id);
-      next();
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+//!this is the promise based
+// app.use((req, res, next) => {
+//   User.findById("67b77d80dfea294bc9892f98")
+//     .then((user) => {
+//       req.user = new User(user.name, user.email, user.cart, user._id);
+//       next();
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//     });
+// });
+
+//?this is the async/await approach
+app.use(async (req, res, next) => {
+  try {
+    const user = await User.findById("67b77d80dfea294bc9892f98");
+    req.user = new User(user.name, user.email, user.cart, user._id);
+    next();
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 app.use("/admin", adminRoutes);

@@ -82,5 +82,51 @@ class User {
       console.log(err);
     }
   }
+  async deleteCartItem(prodId) {
+    try {
+      const db = getDB();
+      const updatedCartItems = this.cart.items.filter((item) => {
+        return item.productId.toString() !== prodId.toString();
+      });
+      const newCart = db
+        .collection("users")
+        .updateOne(
+          { _id: new mongodb.ObjectId(this._id) },
+          { $set: { cart: { items: updatedCartItems } } }
+        );
+      return newCart;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  async addOrder() {
+    try {
+      const db = getDB();
+      let cartProducts = await this.getCart();
+      let order = {
+        items: cartProducts,
+        user: { _id: new mongodb.ObjectId(this._id), name: this.name },
+      };
+      const insertedOrder = await db.collection("orders").insertOne(order);
+      this.cart = { items: [] };
+      const updatedCart = await db
+        .collection("users")
+        .updateOne(
+          { _id: new mongodb.ObjectId(this._id) },
+          { $set: { cart: { items: [] } } }
+        );
+      return updatedCart;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  async getOrders() {
+    const db = getDB();
+    const orders = await db
+      .collection("orders")
+      .find({ "user._id": new mongodb.ObjectId(this._id) })
+      .toArray();
+    return orders;
+  }
 }
 module.exports = User;
