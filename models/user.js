@@ -65,6 +65,7 @@ class User {
       const productIds = this.cart.items.map((items) => {
         return items.productId;
       });
+      //ws
       const cartProduct = await db
         .collection("products")
         .find({ _id: { $in: productIds } })
