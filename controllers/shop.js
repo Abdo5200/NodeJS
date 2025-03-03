@@ -5,7 +5,7 @@ const express = require("express");
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.fetchAll();
+    const products = await Product.find();
     res.render("shop/product-list", {
       prods: products,
       pageTitle: "All Products",
@@ -42,9 +42,9 @@ exports.getProduct = async (req, res, next) => {
   // } catch (err) {
   //   console.log(err);
   // }
-  //*this is with mongo
+  //*this is with mongo/mongoose
   try {
-    const product = await Product.fetchProduct(prodId);
+    const product = await Product.findById(prodId);
     res.render("shop/product-detail", {
       //product is an array with one object with a unique id and we want to return one object so [0]
       product: product,
@@ -57,7 +57,7 @@ exports.getProduct = async (req, res, next) => {
 };
 exports.getIndex = async (req, res, next) => {
   try {
-    const products = await Product.fetchAll();
+    const products = await Product.find();
     res.render("shop/index", {
       prods: products,
       pageTitle: "Shop",

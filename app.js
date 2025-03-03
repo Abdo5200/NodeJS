@@ -3,6 +3,8 @@ const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
 
+const mongoose = require("mongoose");
+
 const errorController = require("./controllers/error");
 
 const User = require("./models/user");
@@ -15,7 +17,7 @@ app.set("views", "views");
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 
-const mongoConnection = require("./util/database").mongoConnection;
+// const mongoConnection = require("./util/database").mongoConnection;
 
 //?this for sequelize and mysql
 // const sequelize = require("./util/database");
@@ -45,8 +47,8 @@ app.use(express.static(path.join(__dirname, "public")));
 //?this is the async/await approach
 app.use(async (req, res, next) => {
   try {
-    const user = await User.findById("67b77d80dfea294bc9892f98");
-    req.user = new User(user.name, user.email, user.cart, user._id);
+    const user = await User.findById("67c61174e0bd2092fcac587f");
+    req.user = user;
     next();
   } catch (err) {
     console.log(err);
@@ -58,9 +60,31 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnection(() => {
-  app.listen(3000);
-});
+mongoose
+  .connect(
+    "mongodb+srv://abdelrahman_mamdouh:AmdRyzen32200g@cluster0.henws.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0"
+  )
+  .then(async (result) => {
+    const existingUser = await User.findOne();
+    if (!existingUser) {
+      const user = new User({
+        name: "Abdelrahman Mamdouh",
+        email: "test123@test.com",
+        cart: {
+          items: [],
+        },
+      });
+      user.save();
+    }
+    app.listen(3000);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+// mongoConnection(() => {
+//   app.listen(3000);
+// });
 
 //!this was for mysql connection
 // Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
