@@ -54,13 +54,6 @@ exports.postEditProduct = async (req, res, next) => {
   const updatedImgUrl = req.body.imageUrl;
   const updatedDescription = req.body.description;
   try {
-    // const updatedProduct = new Product({
-    //   title: updatedTitle,
-    //   price: updatedPrice,
-    //   description: updatedDescription,
-    //   imageUrl: updatedImgUrl,
-    //   prodId,
-    // });
     const product = await Product.findByIdAndUpdate(prodId, {
       title: updatedTitle,
       price: updatedPrice,
@@ -82,20 +75,13 @@ exports.postDeleteProduct = async (req, res, next) => {
   } catch (err) {
     console.log(err);
   }
-  // Product.findByPk(prodId)
-  //   .then((product) => {
-  //     return product.destroy();
-  //   })
-  //   .then((result) => {
-  //     console.log("Product Deleted");
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  //   });
 };
 exports.getProducts = async (req, res, next) => {
   try {
     const products = await Product.find();
+    //?use select to choose some of the incoming data and '-' to exclude some data
+    // .select("title price imageUrl description -_id")
+    // .populate("userId");
     res.render("admin/products", {
       prods: products,
       pageTitle: "Admin Products",
