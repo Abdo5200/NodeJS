@@ -3,7 +3,6 @@ const Product = require("../models/product");
 const Order = require("../models/order");
 // const Order = require("../models/order");
 const express = require("express");
-
 exports.getProducts = async (req, res, next) => {
   try {
     const products = await Product.find();
