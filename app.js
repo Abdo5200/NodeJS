@@ -78,6 +78,7 @@ mongoose
       });
       user.save();
     }
+    console.log("Connected");
     app.listen(3000);
   })
   .catch((err) => {
