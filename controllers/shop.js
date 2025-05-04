@@ -87,6 +87,9 @@ exports.postCartDelteItem = async (req, res, next) => {
 
 exports.postOrder = async (req, res, next) => {
   try {
+    //this takes the productId in the items array
+    //then gets the product object using the id and put the object instead of the id
+    //this is useful as we not get the product manually
     const user = await req.user.populate("cart.items.productId");
     const products = user.cart.items.map((item) => {
       return { quantity: item.quantity, product: { ...item.productId._doc } }; //? this will get all product data using _doc and will spread it

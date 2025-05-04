@@ -24,15 +24,20 @@ const userSchema = new Schema({
 });
 userSchema.methods.addToCart = async function (product) {
   try {
+    //get the product index in the cart array if it exists
     const cartProductIndex = this.cart.items.findIndex((cartPro) => {
       return cartPro.productId.toString() === product._id.toString();
     });
     let newQty = 1;
+    //get an array of products in the existing cart
     const updatedCartItems = [...this.cart.items];
+    //if not -1 (not exist)
     if (cartProductIndex >= 0) {
+      //increase the quantity of the product
       newQty = this.cart.items[cartProductIndex].quantity + 1;
       updatedCartItems[cartProductIndex].quantity = newQty;
     } else {
+      //this means that it doesn't exist so we add the new product
       updatedCartItems.push({
         productId: product._id,
         quantity: newQty,
@@ -48,6 +53,7 @@ userSchema.methods.addToCart = async function (product) {
   }
 };
 userSchema.methods.deleteCartItem = async function (prodId) {
+  //this will return a cart items array without the specified product in it
   const updatedCartItems = this.cart.items.filter((item) => {
     return item.productId.toString() !== prodId.toString();
   });
