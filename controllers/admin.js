@@ -1,6 +1,9 @@
 const { query } = require("express");
 const Product = require("../models/product");
-
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
@@ -9,7 +12,10 @@ exports.getAddProduct = (req, res, next) => {
     isAuthenticated: req.isLoggedIn,
   });
 };
-
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.postAddProduct = async (req, res, next) => {
   //take the product details from request body
   const title = req.body.title;
@@ -32,6 +38,10 @@ exports.postAddProduct = async (req, res, next) => {
     console.log(err);
   }
 };
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.getEditProduct = async (req, res, next) => {
   //checks first if it was called with correct way or someone typed a query
   const editMode = Boolean(req.query.edit);
@@ -54,7 +64,10 @@ exports.getEditProduct = async (req, res, next) => {
     console.log(err);
   }
 };
-
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.postEditProduct = async (req, res, next) => {
   const prodId = req.body.productId;
   const updatedTitle = req.body.title;
@@ -76,6 +89,10 @@ exports.postEditProduct = async (req, res, next) => {
     console.log(err);
   }
 };
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.postDeleteProduct = async (req, res, next) => {
   const prodId = req.body.productId;
   try {
@@ -85,6 +102,10 @@ exports.postDeleteProduct = async (req, res, next) => {
     console.log(err);
   }
 };
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.getProducts = async (req, res, next) => {
   try {
     const products = await Product.find();

@@ -3,6 +3,10 @@ const Product = require("../models/product");
 const Order = require("../models/order");
 // const Order = require("../models/order");
 const express = require("express");
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.getProducts = async (req, res, next) => {
   try {
     const products = await Product.find();
@@ -16,7 +20,10 @@ exports.getProducts = async (req, res, next) => {
     console.log(err);
   }
 };
-
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.getProduct = async (req, res, next) => {
   //? we can use findAll to return an array of products that meets some criteria
   //? but in this case it will return one item
@@ -35,6 +42,10 @@ exports.getProduct = async (req, res, next) => {
     console.log(err);
   }
 };
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.getIndex = async (req, res, next) => {
   try {
     const products = await Product.find();
@@ -48,7 +59,10 @@ exports.getIndex = async (req, res, next) => {
     console.log(err);
   }
 };
-
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.getCart = async (req, res, next) => {
   try {
     const user = await req.user.populate("cart.items.productId");
@@ -63,7 +77,10 @@ exports.getCart = async (req, res, next) => {
     console.log(err);
   }
 };
-
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.postCart = async (req, res, next) => {
   const prodId = req.body.productId;
   try {
@@ -74,7 +91,10 @@ exports.postCart = async (req, res, next) => {
     console.log(err);
   }
 };
-
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.postCartDelteItem = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
@@ -84,7 +104,10 @@ exports.postCartDelteItem = async (req, res, next) => {
     console.log(err);
   }
 };
-
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.postOrder = async (req, res, next) => {
   try {
     //this takes the productId in the items array
@@ -108,7 +131,10 @@ exports.postOrder = async (req, res, next) => {
     console.log(err);
   }
 };
-
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.getOrders = async (req, res, next) => {
   try {
     const orders = await Order.find({ "user.userId": req.user._id });

@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "custom-cli": "file:",
     "mongodb": "^6.13.1"
   }
 }
