@@ -5,9 +5,15 @@ const bodyParser = require("body-parser");
 
 const mongoose = require("mongoose");
 const session = require("express-session");
+const MongoDBStore = require("connect-mongodb-session")(session);
 
 const errorController = require("./controllers/error");
-
+const MONGODB_URI =
+  "mongodb+srv://abdelrahman_mamdouh:AmdRyzen32200g@cluster0.henws.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0";
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: "sessions",
+});
 const User = require("./models/user");
 
 const app = express();
@@ -34,9 +40,23 @@ const authRoutes = require("./routes/auth");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
-  session({ secret: "my secret", resave: false, saveUninitialized: false })
+  session({
+    secret: "my secret",
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+  })
 );
-
+app.use(async (req, res, next) => {
+  if (!req.session.user) return next();
+  try {
+    const user = await User.findById(req.session.user._id);
+    req.user = user;
+    next();
+  } catch (err) {
+    console.log(err);
+  }
+});
 //!this is the promise based
 // app.use((req, res, next) => {
 //   User.findById("67b77d80dfea294bc9892f98")
@@ -49,17 +69,6 @@ app.use(
 //     });
 // });
 
-//?this is the async/await approach
-app.use(async (req, res, next) => {
-  try {
-    const user = await User.findById("67c61174e0bd2092fcac587f");
-    req.user = user;
-    next();
-  } catch (err) {
-    console.log(err);
-  }
-});
-
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
@@ -67,9 +76,7 @@ app.use(authRoutes);
 app.use(errorController.get404);
 
 mongoose
-  .connect(
-    "mongodb+srv://abdelrahman_mamdouh:AmdRyzen32200g@cluster0.henws.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0"
-  )
+  .connect(MONGODB_URI)
   .then(async (result) => {
     const existingUser = await User.findOne();
     if (!existingUser) {
