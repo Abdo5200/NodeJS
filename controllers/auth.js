@@ -2,7 +2,7 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const nodeMailer = require("nodemailer");
 const sendGridTransport = require("nodemailer-sendgrid-transport");
-
+const crypto = require("crypto");
 const transporter = nodeMailer.createTransport(
   sendGridTransport({
     auth: {
@@ -121,4 +121,112 @@ exports.getSignup = (req, res, next) => {
     pageTitle: "Sign up",
     errorMessage: message,
   });
+};
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+exports.getReset = (req, res, next) => {
+  let message = req.flash("error");
+  if (message.length > 0) {
+    message = message[0];
+  } else message = null;
+  res.render("auth/reset", {
+    path: "/reset",
+    pageTitle: "Reset Password",
+    errorMessage: message,
+  });
+};
+
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+
+exports.postReset = async (req, res, next) => {
+  try {
+    const buffer = crypto.randomBytes(32);
+    const token = buffer.toString("hex");
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      req.flash("error", "No account match the provided email");
+      return res.redirect("/reset");
+    }
+    user.resetToken = token;
+    user.resetTokenExpiration = Date.now() + 3600000; //1 hour from now
+    user.save();
+    res.redirect("/");
+    const info = await transporter.sendMail({
+      from: "abdelrahman.mamdouh2200@gmail.com",
+      to: user.email,
+      subject: "Password Reset Request",
+      html: `
+      <p>You requested password reset</p>
+      <p>Click this <a href="http://localhost:3000/reset/${token}">link</a> to set a new password</p>
+      `,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+
+exports.getNewPassword = async (req, res, next) => {
+  try {
+    const token = req.params.token;
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiration: { $gt: Date.now() },
+    });
+    if (!user) {
+      req.flash("error", "Reset link Expire, Request the reset link Again");
+      return res.redirect("/reset");
+    }
+    let message = req.flash("error");
+    if (message.length > 0) {
+      message = message[0];
+    } else message = null;
+    res.render("auth/new-password", {
+      path: "/new-password",
+      pageTitle: "New Password",
+      errorMessage: message,
+      userId: user._id.toString(),
+      passwordToken: token,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+exports.postNewPassword = async (req, res, next) => {
+  try {
+    const userId = req.body.userId;
+    const newPassword = req.body.password;
+    const passwordToken = req.body.passwordToken;
+    const user = await User.findOne({
+      _id: userId,
+      resetToken: passwordToken,
+      resetTokenExpiration: { $gt: Date.now() },
+    });
+    if (!user) {
+      req.flash("error", "Password Request Timed Out");
+      return res.redirect("/reset");
+    }
+    const hashedPass = await bcrypt.hash(newPassword, 12);
+    user.password = hashedPass;
+    user.resetToken = undefined;
+    user.resetTokenExpiration = undefined;
+    await user.save();
+    res.redirect("/login");
+  } catch (err) {
+    console.log(err);
+  }
 };

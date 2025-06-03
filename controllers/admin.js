@@ -49,7 +49,10 @@ exports.getEditProduct = async (req, res, next) => {
   const prodId = req.params.productId;
   try {
     //get the product object
-    const product = await Product.findById(prodId);
+    const product = await Product.findOne({
+      _id: prodId,
+      userId: req.user._id,
+    });
     //if it does not exist then someone called edit in the url and added a fake id
     if (!product) return res.redirect("/");
     res.render("admin/edit-product", {
@@ -67,20 +70,24 @@ exports.getEditProduct = async (req, res, next) => {
  * @param {import('express').Response} res
  */
 exports.postEditProduct = async (req, res, next) => {
-  const prodId = req.body.productId;
-  const updatedTitle = req.body.title;
-  const updatedPrice = req.body.price;
-  const updatedImgUrl = req.body.imageUrl;
-  const updatedDescription = req.body.description;
   try {
-    const product = await Product.findByIdAndUpdate(prodId, {
-      title: updatedTitle,
-      price: updatedPrice,
-      description: updatedDescription,
-      imageUrl: updatedImgUrl,
+    const prodId = req.body.productId;
+    const updatedTitle = req.body.title;
+    const updatedPrice = req.body.price;
+    const updatedImgUrl = req.body.imageUrl;
+    const updatedDescription = req.body.description;
+    const product = await Product.findOne({
+      _id: prodId,
+      userId: req.user._id,
     });
-    //!why commented
-    // updatedProduct.save();
+    if (!product) {
+      return res.redirect("/");
+    }
+    product.title = updatedTitle;
+    product.price = updatedPrice;
+    product.description = updatedDescription;
+    product.imageUrl = updatedImgUrl;
+    product.save();
     console.log("Updated Product");
     res.redirect("/admin/products");
   } catch (err) {
@@ -94,7 +101,10 @@ exports.postEditProduct = async (req, res, next) => {
 exports.postDeleteProduct = async (req, res, next) => {
   const prodId = req.body.productId;
   try {
-    const deletedProduct = await Product.findByIdAndDelete(prodId);
+    await Product.deleteOne({
+      _id: prodId,
+      userId: req.user._id,
+    });
     res.redirect("/admin/products");
   } catch (err) {
     console.log(err);
@@ -106,7 +116,7 @@ exports.postDeleteProduct = async (req, res, next) => {
  */
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find({ userId: req.user._id });
     //?use select to choose some of the incoming data and '-' to exclude some data
     // .select("title price imageUrl description -_id")
     // .populate("userId");
