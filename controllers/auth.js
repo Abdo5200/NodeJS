@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const bcrypt = require("bcryptjs");
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
@@ -23,7 +24,13 @@ exports.getLogin = async (req, res, next) => {
 
 exports.postLogin = async (req, res, next) => {
   try {
-    const user = await User.findById("67c61174e0bd2092fcac587f");
+    const email = req.body.email;
+    const password = req.body.password;
+    const user = await User.findOne({ email: email });
+    if (!user) return res.redirect("/login");
+    const matchPass = await bcrypt.compare(password, user.password);
+    console.log("match val ", matchPass);
+    if (!matchPass) return res.redirect("/login");
     req.session.user = user;
     req.session.isLoggedIn = true;
     req.session.save((err) => {
@@ -45,4 +52,39 @@ exports.postLogout = async (req, res, next) => {
   } catch (err) {
     console.log(err);
   }
+};
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+exports.postSignup = async (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+  try {
+    const existUser = await User.findOne({ email: email });
+    if (existUser) return res.redirect("/signup");
+    const hashedPass = await bcrypt.hash(password, 12);
+    const user = new User({
+      email: email,
+      password: hashedPass,
+      cart: { items: [] },
+    });
+    user.save();
+    res.redirect("/login");
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+exports.getSignup = (req, res, next) => {
+  res.render("auth/signup", {
+    path: "/signup",
+    pageTitle: "Sign up",
+    isAuthenticated: false,
+  });
 };
