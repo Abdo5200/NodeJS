@@ -3,9 +3,20 @@ const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
 
+const mongoose = require("mongoose");
+const session = require("express-session");
+const MongoDBStore = require("connect-mongodb-session")(session);
+const csrf = require("csurf");
 const errorController = require("./controllers/error");
-
-// const User = require("./models/user");
+const MONGODB_URI =
+  "mongodb+srv://abdelrahman_mamdouh:AmdRyzen32200g@cluster0.henws.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0";
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: "sessions",
+});
+const csrfProtection = csrf({});
+const flash = require("connect-flash");
+const User = require("./models/user");
 
 const app = express();
 
@@ -14,8 +25,9 @@ app.set("views", "views");
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
+const authRoutes = require("./routes/auth");
 
-const mongoConnection = require("./util/database").mongoConnection;
+// const mongoConnection = require("./util/database").mongoConnection;
 
 //?this for sequelize and mysql
 // const sequelize = require("./util/database");
@@ -29,29 +41,64 @@ const mongoConnection = require("./util/database").mongoConnection;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
-
+app.use(
+  session({
+    secret: "my secret",
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+  })
+);
+app.use(csrfProtection);
+app.use(flash());
+app.use(async (req, res, next) => {
+  if (!req.session.user) return next();
+  try {
+    const user = await User.findById(req.session.user._id);
+    req.user = user;
+    next();
+  } catch (err) {
+    console.log(err);
+  }
+});
+//!this is the promise based
+// app.use((req, res, next) => {
+//   User.findById("67b77d80dfea294bc9892f98")
+//     .then((user) => {
+//       req.user = new User(user.name, user.email, user.cart, user._id);
+//       next();
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//     });
+// });
 app.use((req, res, next) => {
-  // User.findByPk(1)
-  //   .then((user) => {
-  //     req.user = user;
-  //     next();
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  //   });
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
   next();
 });
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 
 app.use(errorController.get404);
 
-mongoConnection(() => {
-  app.listen(3000);
-});
+mongoose
+  .connect(MONGODB_URI)
+  .then(async (result) => {
+    console.log("Connected");
+    app.listen(3000);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
 
-//!this for mysql connection
+// mongoConnection(() => {
+//   app.listen(3000);
+// });
+
+//!this was for mysql connection
 // Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
 // User.hasMany(Product);
 

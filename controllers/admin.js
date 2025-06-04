@@ -1,98 +1,175 @@
 const { query } = require("express");
 const Product = require("../models/product");
-
+const { validationResult } = require("express-validator");
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
     path: "/admin/add-product",
+    product: { title: "", imageUrl: "", price: undefined, description: "" },
+    hasError: false,
     editing: false,
+    errorMessage: null,
+    validationErrors: [],
   });
 };
-
-exports.postAddProduct = (req, res, next) => {
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+exports.postAddProduct = async (req, res, next) => {
+  //take the product details from request body
   const title = req.body.title;
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  const product = new Product(title, price, description, imageUrl);
-  product
-    .save()
-    .then((result) => {
-      console.log("Created Product");
-      res.redirect("/admin/products");
-    })
-    .catch((err) => {
-      console.log(err);
+  //create a new product object from Product Schema
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).render("admin/edit-product", {
+        path: "/admin/edit-product",
+        pageTitle: "Add Product",
+        product: {
+          title: title,
+          imageUrl: imageUrl,
+          price: price,
+          description: description,
+        },
+        hasError: true,
+        editing: false,
+        errorMessage: errors.array()[0].msg,
+        validationErrors: errors.array(),
+      });
+    }
+    const product = new Product({
+      title: title,
+      imageUrl: imageUrl,
+      price: price,
+      description: description,
+      userId: req.user,
     });
+    await product.save();
+    console.log("Created Product");
+    res.redirect("/admin/products");
+  } catch (err) {
+    console.log(err);
+  }
 };
-// exports.getEditProduct = (req, res, next) => {
-//   const editMode = Boolean(req.query.edit);
-//   if (!editMode) return res.redirect("/");
-//   const prodId = req.params.productId;
-//   req.user
-//     .getProducts({ where: { id: prodId } })
-//     .then((products) => {
-//       const product = products[0];
-//       if (!product) return res.redirect("/");
-//       res.render("admin/edit-product", {
-//         pageTitle: "Edit Product",
-//         path: "/admin/edit-product",
-//         editing: editMode,
-//         product: product,
-//       });
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//     });
-// };
-
-// exports.postEditProduct = (req, res, next) => {
-//   const prodId = req.body.productId;
-//   const updatedTitle = req.body.title;
-//   const updatedPrice = req.body.price;
-//   const updatedImgUrl = req.body.imageUrl;
-//   const updatedDescription = req.body.description;
-//   Product.findByPk(prodId)
-//     .then((product) => {
-//       product.title = updatedTitle;
-//       product.price = updatedPrice;
-//       product.imageUrl = updatedImgUrl;
-//       product.description = updatedDescription;
-//       return product.save();
-//     })
-//     .then((result) => {
-//       console.log("Updated Product");
-//       res.redirect("/admin/products");
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//     });
-// };
-// exports.postDeleteProduct = (req, res, next) => {
-//   const prodId = req.body.productId;
-//   Product.findByPk(prodId)
-//     .then((product) => {
-//       return product.destroy();
-//     })
-//     .then((result) => {
-//       console.log("Product Deleted");
-//       res.redirect("/admin/products");
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//     });
-// };
-// exports.getProducts = (req, res, next) => {
-//   req.user
-//     .getProducts()
-//     .then((products) => {
-//       res.render("admin/products", {
-//         prods: products,
-//         pageTitle: "Admin Products",
-//         path: "/admin/products",
-//       });
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//     });
-// };
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+exports.getEditProduct = async (req, res, next) => {
+  //checks first if it was called with correct way or someone typed a query
+  const editMode = Boolean(req.query.edit);
+  //if someone forced it return to main page
+  if (!editMode) return res.redirect("/");
+  const prodId = req.params.productId;
+  try {
+    //get the product object
+    const product = await Product.findOne({
+      _id: prodId,
+      userId: req.user._id,
+    });
+    //if it does not exist then someone called edit in the url and added a fake id
+    if (!product) return res.redirect("/");
+    res.render("admin/edit-product", {
+      pageTitle: "Edit Product",
+      path: "/admin/edit-product",
+      editing: editMode,
+      product: product,
+      hasError: false,
+      errorMessage: null,
+      validationErrors: [],
+      productId: prodId,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+exports.postEditProduct = async (req, res, next) => {
+  try {
+    const prodId = req.body.productId;
+    const updatedTitle = req.body.title;
+    const updatedPrice = req.body.price;
+    const updatedImgUrl = req.body.imageUrl;
+    const updatedDescription = req.body.description;
+    const product = await Product.findOne({
+      _id: prodId,
+      userId: req.user._id,
+    });
+    if (!product) {
+      return res.redirect("/");
+    }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).render("admin/edit-product", {
+        path: "/admin/edit-product",
+        pageTitle: "Add Product",
+        product: {
+          title: updatedTitle,
+          imageUrl: updatedImgUrl,
+          price: updatedPrice,
+          description: updatedDescription,
+          _id: prodId,
+        },
+        hasError: true,
+        editing: true,
+        errorMessage: errors.array()[0].msg,
+        validationErrors: errors.array(),
+        productId: prodId,
+      });
+    }
+    product.title = updatedTitle;
+    product.price = updatedPrice;
+    product.description = updatedDescription;
+    product.imageUrl = updatedImgUrl;
+    product.save();
+    res.redirect("/admin/products");
+  } catch (err) {
+    console.log(err);
+  }
+};
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+exports.postDeleteProduct = async (req, res, next) => {
+  const prodId = req.body.productId;
+  try {
+    await Product.deleteOne({
+      _id: prodId,
+      userId: req.user._id,
+    });
+    res.redirect("/admin/products");
+  } catch (err) {
+    console.log(err);
+  }
+};
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+exports.getProducts = async (req, res, next) => {
+  try {
+    const products = await Product.find({ userId: req.user._id });
+    //?use select to choose some of the incoming data and '-' to exclude some data
+    // .select("title price imageUrl description -_id")
+    // .populate("userId");
+    res.render("admin/products", {
+      prods: products,
+      pageTitle: "Admin Products",
+      path: "/admin/products",
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};

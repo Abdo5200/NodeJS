@@ -1,24 +1,57 @@
 const path = require("path");
 
 const express = require("express");
-
+const Product = require("../models/product");
 const adminController = require("../controllers/admin");
+const isAuth = require("../middleware/is-auth");
+const { body } = require("express-validator");
 
 const router = express.Router();
 
 // /admin/add-product => GET
-router.get("/add-product", adminController.getAddProduct);
+router.get("/add-product", isAuth, adminController.getAddProduct);
 
 // /admin/products => GET
-// router.get("/products", adminController.getProducts);
+router.get("/products", isAuth, adminController.getProducts);
 
 // /admin/add-product => POST
-router.post("/add-product", adminController.postAddProduct);
+router.post(
+  "/add-product",
+  isAuth,
+  [
+    body("title", "Type a title with at least 3 characters long")
+      .isString()
+      .isLength({ min: 3 })
+      .trim(),
+    body("imageUrl", "Invalid URL").trim().isURL(),
+    body("price", "Please Provide a price").isFloat(),
+    body("description", "type a description between 8 and 400 characters")
+      .isLength({ min: 8, max: 400 })
+      .trim(),
+  ],
+  adminController.postAddProduct
+);
 
-// router.get("/edit-product/:productId", adminController.getEditProduct);
+router.get("/edit-product/:productId", isAuth, adminController.getEditProduct);
 
-// router.post("/edit-product", adminController.postEditProduct);
+router.post(
+  "/edit-product",
+  isAuth,
+  isAuth,
+  [
+    body("title", "Type a title with at least 3 characters long")
+      .isString()
+      .isLength({ min: 3 })
+      .trim(),
+    body("imageUrl", "Invalid URL").trim().isURL(),
+    body("price", "Please Provide a price").isFloat(),
+    body("description", "type a description between 8 and 400 characters")
+      .isLength({ min: 8, max: 400 })
+      .trim(),
+  ],
+  adminController.postEditProduct
+);
 
-// router.post("/delete-product", adminController.postDeleteProduct);
+router.post("/delete-product", isAuth, adminController.postDeleteProduct);
 
 module.exports = router;
