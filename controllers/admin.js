@@ -1,5 +1,6 @@
 const { query } = require("express");
 const Product = require("../models/product");
+const { validationResult } = require("express-validator");
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
@@ -8,7 +9,11 @@ exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
     path: "/admin/add-product",
+    product: { title: "", imageUrl: "", price: undefined, description: "" },
+    hasError: false,
     editing: false,
+    errorMessage: null,
+    validationErrors: [],
   });
 };
 /**
@@ -22,14 +27,31 @@ exports.postAddProduct = async (req, res, next) => {
   const price = req.body.price;
   const description = req.body.description;
   //create a new product object from Product Schema
-  const product = new Product({
-    title: title,
-    imageUrl: imageUrl,
-    price: price,
-    description: description,
-    userId: req.user,
-  });
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).render("admin/edit-product", {
+        path: "/admin/edit-product",
+        pageTitle: "Add Product",
+        product: {
+          title: title,
+          imageUrl: imageUrl,
+          price: price,
+          description: description,
+        },
+        hasError: true,
+        editing: false,
+        errorMessage: errors.array()[0].msg,
+        validationErrors: errors.array(),
+      });
+    }
+    const product = new Product({
+      title: title,
+      imageUrl: imageUrl,
+      price: price,
+      description: description,
+      userId: req.user,
+    });
     await product.save();
     console.log("Created Product");
     res.redirect("/admin/products");
@@ -60,6 +82,10 @@ exports.getEditProduct = async (req, res, next) => {
       path: "/admin/edit-product",
       editing: editMode,
       product: product,
+      hasError: false,
+      errorMessage: null,
+      validationErrors: [],
+      productId: prodId,
     });
   } catch (err) {
     console.log(err);
@@ -83,12 +109,30 @@ exports.postEditProduct = async (req, res, next) => {
     if (!product) {
       return res.redirect("/");
     }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).render("admin/edit-product", {
+        path: "/admin/edit-product",
+        pageTitle: "Add Product",
+        product: {
+          title: updatedTitle,
+          imageUrl: updatedImgUrl,
+          price: updatedPrice,
+          description: updatedDescription,
+          _id: prodId,
+        },
+        hasError: true,
+        editing: true,
+        errorMessage: errors.array()[0].msg,
+        validationErrors: errors.array(),
+        productId: prodId,
+      });
+    }
     product.title = updatedTitle;
     product.price = updatedPrice;
     product.description = updatedDescription;
     product.imageUrl = updatedImgUrl;
     product.save();
-    console.log("Updated Product");
     res.redirect("/admin/products");
   } catch (err) {
     console.log(err);

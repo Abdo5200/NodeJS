@@ -251,3 +251,7 @@ form {
     width: 30rem;
   }
 }
+.form-control input.invalid,
+.form-control textarea.invalid {
+  border-color: red;
+}
