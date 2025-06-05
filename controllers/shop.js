@@ -3,6 +3,11 @@ const Product = require("../models/product");
 const Order = require("../models/order");
 // const Order = require("../models/order");
 const express = require("express");
+let errorCall = (err, next) => {
+  const error = new Error(err);
+  error.httpStatusCode = 500;
+  next(error);
+};
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
@@ -17,7 +22,7 @@ exports.getProducts = async (req, res, next) => {
       path: "/products",
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 
@@ -40,7 +45,7 @@ exports.getProduct = async (req, res, next) => {
       path: "/products",
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 
@@ -58,7 +63,7 @@ exports.getIndex = async (req, res, next) => {
       path: "/",
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -75,7 +80,7 @@ exports.getCart = async (req, res, next) => {
       products: products,
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -89,7 +94,7 @@ exports.postCart = async (req, res, next) => {
     const addedProduct = await req.user.addToCart(product);
     res.redirect("/cart");
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -102,7 +107,7 @@ exports.postCartDelteItem = async (req, res, next) => {
     await req.user.deleteCartItem(prodId);
     res.redirect("/cart");
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -129,7 +134,7 @@ exports.postOrder = async (req, res, next) => {
     req.user.clearCart();
     res.redirect("/orders");
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -145,6 +150,6 @@ exports.getOrders = async (req, res, next) => {
       orders: orders,
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };

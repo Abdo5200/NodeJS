@@ -1,6 +1,12 @@
 const { query } = require("express");
 const Product = require("../models/product");
+const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
+let errorCall = (err, next) => {
+  const error = new Error(err);
+  error.httpStatusCode = 500;
+  next(error);
+};
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
@@ -31,7 +37,7 @@ exports.postAddProduct = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).render("admin/edit-product", {
-        path: "/admin/edit-product",
+        path: "/admin/add-product",
         pageTitle: "Add Product",
         product: {
           title: title,
@@ -56,7 +62,7 @@ exports.postAddProduct = async (req, res, next) => {
     console.log("Created Product");
     res.redirect("/admin/products");
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -88,7 +94,7 @@ exports.getEditProduct = async (req, res, next) => {
       productId: prodId,
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -135,7 +141,7 @@ exports.postEditProduct = async (req, res, next) => {
     product.save();
     res.redirect("/admin/products");
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -151,7 +157,7 @@ exports.postDeleteProduct = async (req, res, next) => {
     });
     res.redirect("/admin/products");
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -170,6 +176,6 @@ exports.getProducts = async (req, res, next) => {
       path: "/admin/products",
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };

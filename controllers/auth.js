@@ -5,7 +5,11 @@ const sendGridTransport = require("nodemailer-sendgrid-transport");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 const path = require("path");
-
+let errorCall = (err, next) => {
+  const error = new Error(err);
+  error.httpStatusCode = 500;
+  next(error);
+};
 const transporter = nodeMailer.createTransport(
   sendGridTransport({
     auth: {
@@ -35,7 +39,7 @@ exports.getLogin = async (req, res, next) => {
       validationErrors: [],
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -63,7 +67,7 @@ exports.postLogin = async (req, res, next) => {
       res.redirect("/");
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -75,7 +79,7 @@ exports.postLogout = async (req, res, next) => {
     await req.session.destroy();
     res.redirect("/");
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 /**
@@ -117,7 +121,7 @@ exports.postSignup = async (req, res, next) => {
     });
     console.log("Email sent: ", info);
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 
@@ -126,36 +130,44 @@ exports.postSignup = async (req, res, next) => {
  * @param {import('express').Response} res
  */
 exports.getSignup = (req, res, next) => {
-  let message = req.flash("error");
-  if (message.length > 0) {
-    message = message[0];
-  } else message = null;
-  res.render("auth/signup", {
-    path: "/signup",
-    pageTitle: "Sign up",
-    errorMessage: message,
-    oldInput: {
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-    validationErrors: [],
-  });
+  try {
+    let message = req.flash("error");
+    if (message.length > 0) {
+      message = message[0];
+    } else message = null;
+    res.render("auth/signup", {
+      path: "/signup",
+      pageTitle: "Sign up",
+      errorMessage: message,
+      oldInput: {
+        email: "",
+        password: "",
+        confirmPassword: "",
+      },
+      validationErrors: [],
+    });
+  } catch (err) {
+    errorCall(err, next);
+  }
 };
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
 exports.getReset = (req, res, next) => {
-  let message = req.flash("error");
-  if (message.length > 0) {
-    message = message[0];
-  } else message = null;
-  res.render("auth/reset", {
-    path: "/reset",
-    pageTitle: "Reset Password",
-    errorMessage: message,
-  });
+  try {
+    let message = req.flash("error");
+    if (message.length > 0) {
+      message = message[0];
+    } else message = null;
+    res.render("auth/reset", {
+      path: "/reset",
+      pageTitle: "Reset Password",
+      errorMessage: message,
+    });
+  } catch (err) {
+    errorCall(err, next);
+  }
 };
 
 /**
@@ -186,7 +198,7 @@ exports.postReset = async (req, res, next) => {
       `,
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 
@@ -218,7 +230,7 @@ exports.getNewPassword = async (req, res, next) => {
       passwordToken: token,
     });
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
 
@@ -247,6 +259,6 @@ exports.postNewPassword = async (req, res, next) => {
     await user.save();
     res.redirect("/login");
   } catch (err) {
-    console.log(err);
+    errorCall(err, next);
   }
 };
