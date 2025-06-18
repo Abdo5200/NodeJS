@@ -5,11 +5,13 @@ const sendGridTransport = require("nodemailer-sendgrid-transport");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 const path = require("path");
+
 let errorCall = (err, next) => {
   const error = new Error(err);
   error.httpStatusCode = 500;
   next(error);
 };
+
 const transporter = nodeMailer.createTransport(
   sendGridTransport({
     auth: {
@@ -23,6 +25,7 @@ const transporter = nodeMailer.createTransport(
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.getLogin = async (req, res, next) => {
   // const isLoggedIn = req.get("Cookie").split(";")[1].split("=")[1] === "true";
   // console.log(isLoggedIn);
@@ -42,6 +45,7 @@ exports.getLogin = async (req, res, next) => {
     errorCall(err, next);
   }
 };
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
@@ -70,10 +74,12 @@ exports.postLogin = async (req, res, next) => {
     errorCall(err, next);
   }
 };
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.postLogout = async (req, res, next) => {
   try {
     await req.session.destroy();
@@ -82,10 +88,12 @@ exports.postLogout = async (req, res, next) => {
     errorCall(err, next);
   }
 };
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.postSignup = async (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -129,6 +137,7 @@ exports.postSignup = async (req, res, next) => {
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.getSignup = (req, res, next) => {
   try {
     let message = req.flash("error");
@@ -150,10 +159,12 @@ exports.getSignup = (req, res, next) => {
     errorCall(err, next);
   }
 };
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.getReset = (req, res, next) => {
   try {
     let message = req.flash("error");
@@ -238,6 +249,7 @@ exports.getNewPassword = async (req, res, next) => {
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.postNewPassword = async (req, res, next) => {
   try {
     const userId = req.body.userId;

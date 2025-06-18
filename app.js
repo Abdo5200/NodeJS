@@ -1,33 +1,72 @@
 const path = require("path");
+
 const express = require("express");
+
 const bodyParser = require("body-parser");
 
 const mongoose = require("mongoose");
+
 const session = require("express-session");
+
 const MongoDBStore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
+
 const errorController = require("./controllers/error");
+
 const MONGODB_URI =
   "mongodb+srv://abdelrahman_mamdouh:AmdRyzen32200g@cluster0.henws.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0";
+
 const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: "sessions",
 });
 const csrfProtection = csrf({});
+
 const flash = require("connect-flash");
+
 const User = require("./models/user");
+
+const multer = require("multer");
 
 const app = express();
 
 app.set("view engine", "ejs");
+
 app.set("views", "views");
 
 const adminRoutes = require("./routes/admin");
+
 const shopRoutes = require("./routes/shop");
+
 const authRoutes = require("./routes/auth");
 
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "images");
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.filename + "-" + file.originalname);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === "images/png" ||
+    file.mimetype === "images/jpg" ||
+    file.mimetype === "images/jpeg"
+  )
+    cb(null, true);
+  else cb(null, false);
+};
+
 app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(
+  multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
+);
+
 app.use(express.static(path.join(__dirname, "public")));
+
 app.use(
   session({
     secret: "my secret",
@@ -36,13 +75,11 @@ app.use(
     store: store,
   })
 );
+
 app.use(csrfProtection);
+
 app.use(flash());
-app.use((req, res, next) => {
-  res.locals.isAuthenticated = req.session.isLoggedIn;
-  res.locals.csrfToken = req.csrfToken();
-  next();
-});
+
 app.use(async (req, res, next) => {
   try {
     if (!req.session.user) return next();
@@ -55,10 +92,20 @@ app.use(async (req, res, next) => {
   }
 });
 
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
+
 app.use("/admin", adminRoutes);
+
 app.use(shopRoutes);
+
 app.use(authRoutes);
+
 app.use("/500", errorController.get500);
+
 app.use(errorController.get404);
 
 app.use((error, req, res, next) => {

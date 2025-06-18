@@ -29,6 +29,7 @@
     "inquirer": "^8.2.5",
     "mongodb": "^6.13.0",
     "mongoose": "^8.11.0",
+    "multer": "^2.0.1",
     "mysql2": "^3.12.0",
     "nodejs-complete-guide": "file:",
     "nodemailer": "^7.0.3",

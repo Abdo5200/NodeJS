@@ -5,12 +5,14 @@ const { validationResult } = require("express-validator");
 let errorCall = (err, next) => {
   const error = new Error(err);
   error.httpStatusCode = 500;
-  next(error);
+  return next(error);
 };
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
@@ -22,18 +24,21 @@ exports.getAddProduct = (req, res, next) => {
     validationErrors: [],
   });
 };
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.postAddProduct = async (req, res, next) => {
-  //take the product details from request body
-  const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
-  const price = req.body.price;
-  const description = req.body.description;
-  //create a new product object from Product Schema
   try {
+    //take the product details from request body
+    const title = req.body.title;
+    const imageUrl = req.file;
+    const price = req.body.price;
+    const description = req.body.description;
+    console.log(imageUrl);
+    //create a new product object from Product Schema
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).render("admin/edit-product", {
@@ -65,10 +70,12 @@ exports.postAddProduct = async (req, res, next) => {
     errorCall(err, next);
   }
 };
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.getEditProduct = async (req, res, next) => {
   //checks first if it was called with correct way or someone typed a query
   const editMode = Boolean(req.query.edit);
@@ -97,10 +104,12 @@ exports.getEditProduct = async (req, res, next) => {
     errorCall(err, next);
   }
 };
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.postEditProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
@@ -144,10 +153,12 @@ exports.postEditProduct = async (req, res, next) => {
     errorCall(err, next);
   }
 };
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.postDeleteProduct = async (req, res, next) => {
   const prodId = req.body.productId;
   try {
@@ -160,10 +171,12 @@ exports.postDeleteProduct = async (req, res, next) => {
     errorCall(err, next);
   }
 };
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
+
 exports.getProducts = async (req, res, next) => {
   try {
     const products = await Product.find({ userId: req.user._id });
