@@ -1,11 +1,23 @@
 const { CURSOR_FLAGS } = require("mongodb");
+
 const Product = require("../models/product");
+
 const Order = require("../models/order");
+
 const PDFDocument = require("pdfkit");
+
 const fs = require("fs");
+
 const path = require("path");
+
+const stripe = require("stripe")(
+  "sk_test_51RdbpbRdhzRxYrox2Hp55uFZCuz5vm57aC41KVbpYzhh6XJXL0aa38rR461vvL0WeWVQXthdBM7IN27f3pxc3Z3d00PSS9yjkG"
+);
+
 const ITEMS_PER_PAGE = 2;
+
 // const Order = require("../models/order");
+
 const express = require("express");
 
 let errorCall = (err, next) => {
@@ -13,12 +25,16 @@ let errorCall = (err, next) => {
   error.httpStatusCode = 500;
   next(error);
 };
+
 let renderProds = async (req, res, link, path, title) => {
   const page = +req.query.page || 1;
+
   let totalItems = await Product.find().countDocuments();
+
   const products = await Product.find()
     .skip((page - 1) * ITEMS_PER_PAGE)
     .limit(ITEMS_PER_PAGE);
+
   res.render(link, {
     prods: products,
     pageTitle: title,
@@ -30,6 +46,19 @@ let renderProds = async (req, res, link, path, title) => {
     previousPage: page - 1,
     lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
   });
+};
+
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+
+exports.getIndex = async (req, res, next) => {
+  try {
+    renderProds(req, res, "shop/index", "/", "Shop");
+  } catch (err) {
+    errorCall(err, next);
+  }
 };
 
 /**
@@ -63,19 +92,6 @@ exports.getProduct = async (req, res, next) => {
       pageTitle: product.title,
       path: "/products",
     });
-  } catch (err) {
-    errorCall(err, next);
-  }
-};
-
-/**
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- */
-
-exports.getIndex = async (req, res, next) => {
-  try {
-    renderProds(req, res, "shop/index", "/", "Shop");
   } catch (err) {
     errorCall(err, next);
   }
@@ -126,6 +142,79 @@ exports.postCartDelteItem = async (req, res, next) => {
     const prodId = req.body.productId;
     await req.user.deleteCartItem(prodId);
     res.redirect("/cart");
+  } catch (err) {
+    errorCall(err, next);
+  }
+};
+
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+
+exports.getCheckout = async (req, res, next) => {
+  try {
+    const user = await req.user.populate("cart.items.productId");
+    const products = user.cart.items;
+    let totalPrice = 0;
+    products.forEach((p) => {
+      totalPrice += p.quantity * p.productId.price;
+    });
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: products.map((p) => {
+        return {
+          price_data: {
+            product_data: {
+              name: p.productId.title,
+              description: p.productId.description,
+            },
+            unit_amount: p.productId.price * 100,
+            currency: "usd",
+          },
+          quantity: p.quantity,
+        };
+      }),
+      success_url: req.protocol + "://" + req.get("host") + "/checkout/success",
+      cancel_url: req.protocol + "://" + req.get("host") + "/checkout/cancel",
+    });
+    res.render("shop/checkout", {
+      path: "/checkout",
+      pageTitle: "Checkout Page",
+      products: products,
+      totalSum: totalPrice,
+      sessionId: session.id,
+    });
+  } catch (err) {
+    errorCall(err, next);
+  }
+};
+
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+
+exports.getCheckoutSuccess = async (req, res, next) => {
+  try {
+    //this takes the productId in the items array
+    //then gets the product object using the id and put the object instead of the id
+    //this is useful as we not get the product manually
+    const user = await req.user.populate("cart.items.productId");
+    const products = user.cart.items.map((item) => {
+      return { quantity: item.quantity, product: { ...item.productId._doc } }; //? this will get all product data using _doc and will spread it
+    });
+    const order = new Order({
+      user: {
+        email: req.user.email,
+        userId: req.user._id,
+      },
+      products: products,
+    });
+    order.save();
+    req.user.clearCart();
+    res.redirect("/orders");
   } catch (err) {
     errorCall(err, next);
   }
