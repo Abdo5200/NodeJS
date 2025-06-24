@@ -28,6 +28,8 @@ const User = require("./models/user");
 
 const multer = require("multer");
 
+const bcrypt = require("bcryptjs");
+
 const app = express();
 
 app.set("view engine", "ejs");
@@ -44,16 +46,18 @@ const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "images");
   },
-  filename: (req, file, cb) => {
-    cb(null, file.filename + "-" + file.originalname);
+  filename: async (req, file, cb) => {
+    const date = new Date().toISOString();
+    const hashedDate = (await bcrypt.hash(date, 10)).replace(/[\/\\$]/g, "-");
+    cb(null, hashedDate + "-" + file.originalname);
   },
 });
 
 const fileFilter = (req, file, cb) => {
   if (
-    file.mimetype === "images/png" ||
-    file.mimetype === "images/jpg" ||
-    file.mimetype === "images/jpeg"
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "image/jpeg"
   )
     cb(null, true);
   else cb(null, false);
@@ -66,6 +70,7 @@ app.use(
 );
 
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use(
   session({
@@ -119,7 +124,7 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(MONGODB_URI)
   .then(async (result) => {
-    console.log("Connected");
+    console.log("DB Connected");
     app.listen(3000);
   })
   .catch((err) => {

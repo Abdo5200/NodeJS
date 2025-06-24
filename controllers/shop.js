@@ -1,6 +1,9 @@
 const { CURSOR_FLAGS } = require("mongodb");
 const Product = require("../models/product");
 const Order = require("../models/order");
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
+const path = require("path");
 // const Order = require("../models/order");
 const express = require("express");
 
@@ -163,5 +166,73 @@ exports.getOrders = async (req, res, next) => {
     });
   } catch (err) {
     errorCall(err, next);
+  }
+};
+
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+
+exports.getInvoice = async (req, res, next) => {
+  try {
+    const orderId = req.params.orderId;
+    const order = await Order.findById(orderId);
+    if (!order) return errorCall(new Error("No Order found"), next);
+
+    if (order.user.userId.toString() !== req.user._id.toString())
+      return errorCall(new Error("Unauthorized Access!"), next);
+
+    const invoiceName = "invoice-" + orderId + ".pdf";
+
+    const invoicePath = path.join("data", "invoices", invoiceName);
+
+    let totalPrice = 0;
+
+    const pdfDoc = new PDFDocument();
+
+    pdfDoc.pipe(fs.createWriteStream(invoicePath));
+
+    pdfDoc.pipe(res);
+
+    pdfDoc.fontSize(26).text("Invoice", {
+      underline: true,
+      align: "center",
+    });
+    pdfDoc.text("------------------------------------------------------");
+    order.products.forEach((prod) => {
+      const productTotalPrice = prod.product.price * prod.quantity;
+      totalPrice += productTotalPrice;
+      pdfDoc
+        .fontSize(16)
+        .text(
+          `${prod.product.title} - ${prod.quantity} x $${prod.product.price} = ${productTotalPrice}`
+        );
+    });
+    pdfDoc.text("----------------------------------", {
+      align: "center",
+    });
+    pdfDoc.fontSize(20).text(`Total = ${totalPrice}`, { align: "center" });
+    pdfDoc.end();
+    // const invoice = fs.readFileSync(invoicePath);
+    // res.setHeader("Content-Type", "application/pdf");
+    // res.setHeader(
+    //   "Content-Disposition",
+    //   'inline; filename = "' + invoiceName + '"'
+    // );
+    // res.send(invoice);
+    //----------------
+    // create a readable stream so the data will be read in chuncks
+    //instead of as a whole to not cause memory pressaure for large files
+    // const file = fs.createReadStream(invoicePath);
+    // res.setHeader("Content-Type", "application/pdf");
+    // res.setHeader(
+    //   "Content-Disposition",
+    //   'inline; filename = "' + invoiceName + '"'
+    // );
+    //send the chunks from the stream into response
+    // file.pipe(res);
+  } catch (e) {
+    errorCall(e, next);
   }
 };
