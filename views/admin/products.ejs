@@ -38,6 +38,16 @@
       </article>
       <% } %>
     </div>
+    <%- include("../includes/pageLink.ejs",
+    {
+      currentPage:currentPage, 
+      hasNextPage:hasNextPage ,
+      nextPage:nextPage , 
+      lastPage:lastPage,
+      hasPreviousPage:hasPreviousPage,
+      previousPage:previousPage
+    }
+    )%>
     <% } else { %>
     <h1>No Products Found!</h1>
     <% } %>

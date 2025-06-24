@@ -115,7 +115,23 @@ form {
   font-size: 1.5rem;
   padding: 0.5rem 2rem;
 }
-
+.mobile-nav__item button {
+  background: none;
+  border: none;
+  color: black;
+  font-size: 1.5rem;
+  padding: 0.5rem 2rem;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.mobile-nav__item button:active,
+.mobile-nav__item button:hover,
+.mobile-nav__item button.active {
+  background: #00695c;
+  color: white;
+  border-radius: 3px;
+}
 .mobile-nav__item a:active,
 .mobile-nav__item a:hover,
 .mobile-nav__item a.active {
@@ -239,6 +255,24 @@ form {
   color: red;
   background: rgb(255, 176, 176);
 }
+.pagination {
+  margin-top: 2rem;
+  text-align: center;
+}
+.pagination a {
+  text-decoration: none;
+  color: #00695c;
+  padding: 0.5rem;
+  border: 1px solid #00695c;
+  margin: 0 1rem;
+}
+.pagination a:hover,
+.pagination a:active,
+.pagination a.active {
+  background: #00695c;
+  color: white;
+}
+
 @media (min-width: 768px) {
   .main-header__nav {
     display: flex;

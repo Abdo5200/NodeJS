@@ -4,6 +4,7 @@ const Order = require("../models/order");
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
+const ITEMS_PER_PAGE = 2;
 // const Order = require("../models/order");
 const express = require("express");
 
@@ -11,6 +12,24 @@ let errorCall = (err, next) => {
   const error = new Error(err);
   error.httpStatusCode = 500;
   next(error);
+};
+let renderProds = async (req, res, link, path, title) => {
+  const page = +req.query.page || 1;
+  let totalItems = await Product.find().countDocuments();
+  const products = await Product.find()
+    .skip((page - 1) * ITEMS_PER_PAGE)
+    .limit(ITEMS_PER_PAGE);
+  res.render(link, {
+    prods: products,
+    pageTitle: title,
+    path: path,
+    currentPage: page,
+    hasNextPage: totalItems > page * ITEMS_PER_PAGE,
+    hasPreviousPage: page > 1 ? true : false,
+    nextPage: page + 1,
+    previousPage: page - 1,
+    lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
+  });
 };
 
 /**
@@ -20,12 +39,7 @@ let errorCall = (err, next) => {
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find();
-    res.render("shop/product-list", {
-      prods: products,
-      pageTitle: "All Products",
-      path: "/products",
-    });
+    renderProds(req, res, "shop/product-list", "/products", "All Products");
   } catch (err) {
     errorCall(err, next);
   }
@@ -61,12 +75,7 @@ exports.getProduct = async (req, res, next) => {
 
 exports.getIndex = async (req, res, next) => {
   try {
-    const products = await Product.find();
-    res.render("shop/index", {
-      prods: products,
-      pageTitle: "Shop",
-      path: "/",
-    });
+    renderProds(req, res, "shop/index", "/", "Shop");
   } catch (err) {
     errorCall(err, next);
   }
