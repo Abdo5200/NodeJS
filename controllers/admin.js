@@ -198,8 +198,8 @@ exports.postEditProduct = async (req, res, next) => {
  * @param {import('express').Response} res
  */
 
-exports.postDeleteProduct = async (req, res, next) => {
-  const prodId = req.body.productId;
+exports.deleteProduct = async (req, res, next) => {
+  const prodId = req.params.productId;
   try {
     const product = await Product.findById(prodId);
     if (!product) errorCall(new Error("Product does not exist"), next);
@@ -208,9 +208,9 @@ exports.postDeleteProduct = async (req, res, next) => {
       _id: prodId,
       userId: req.user._id,
     });
-    res.redirect("/admin/products");
+    res.status(200).json({ message: "success" });
   } catch (err) {
-    errorCall(err, next);
+    res.status(500).json({ message: "deleting product failed" });
   }
 };
 
