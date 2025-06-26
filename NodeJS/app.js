@@ -13,8 +13,7 @@ const csrf = require("csurf");
 
 const errorController = require("./controllers/error");
 
-const MONGODB_URI =
-  "mongodb+srv://abdelrahman_mamdouh:AmdRyzen32200g@cluster0.henws.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0";
+const MONGODB_URI ="";
 
 const store = new MongoDBStore({
   uri: MONGODB_URI,
