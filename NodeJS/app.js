@@ -13,11 +13,9 @@ const csrf = require("csurf");
 
 const errorController = require("./controllers/error");
 
-const MONGODB_URI =
-  "mongodb+srv://abdelrahman_mamdouh:AmdRyzen32200g@cluster0.henws.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0";
-
+require("dotenv").config();
 const store = new MongoDBStore({
-  uri: MONGODB_URI,
+  uri: process.env.MONGODB_URI,
   collection: "sessions",
 });
 const csrfProtection = csrf({});
@@ -74,7 +72,7 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use(
   session({
-    secret: "my secret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: store,
@@ -122,10 +120,10 @@ app.use((error, req, res, next) => {
 });
 
 mongoose
-  .connect(MONGODB_URI)
+  .connect(process.env.MONGODB_URI)
   .then(async (result) => {
     console.log("DB Connected");
-    app.listen(3000);
+    app.listen(process.env.PORT);
   })
   .catch((err) => {
     console.log(err);

@@ -5,6 +5,7 @@ const sendGridTransport = require("nodemailer-sendgrid-transport");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 const path = require("path");
+require("dotenv").config();
 
 let errorCall = (err, next) => {
   const error = new Error(err);
@@ -15,8 +16,7 @@ let errorCall = (err, next) => {
 const transporter = nodeMailer.createTransport(
   sendGridTransport({
     auth: {
-      api_key:
-        "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",
+      api_key: process.env.MAIL_API_KEY,
     },
   })
 );
@@ -123,7 +123,7 @@ exports.postSignup = async (req, res, next) => {
     res.redirect("/login");
     const info = await transporter.sendMail({
       to: email,
-      from: "abdelrahman.mamdouh2200@gmail.com",
+      from: process.env.MY_SENDING_EMAIL,
       subject: "Sign up completed",
       html: "<h1>You successfully signed up!</h1>",
     });
@@ -200,7 +200,7 @@ exports.postReset = async (req, res, next) => {
     user.save();
     res.redirect("/");
     const info = await transporter.sendMail({
-      from: "abdelrahman.mamdouh2200@gmail.com",
+      from: process.env.MY_SENDING_EMAIL,
       to: user.email,
       subject: "Password Reset Request",
       html: `

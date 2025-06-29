@@ -21,6 +21,7 @@
     "connect-flash": "^0.1.1",
     "connect-mongodb-session": "^5.0.0",
     "csurf": "^1.11.0",
+    "dotenv": "^17.0.0",
     "ejs": "^2.7.4",
     "express": "^4.16.3",
     "express-handlebars": "^3.0.0",
@@ -35,6 +36,7 @@
     "nodemailer": "^7.0.3",
     "nodemailer-sendgrid-transport": "^0.2.0",
     "pdfkit": "^0.17.1",
+    "processdotenv": "^1.0.0",
     "pug": "^2.0.3",
     "sequelize": "^6.37.5",
     "stripe": "^18.2.1"
