@@ -100,7 +100,6 @@ exports.postAddProduct = async (req, res, next) => {
       userId: req.user,
     });
     await product.save();
-    console.log("Created Product");
     res.redirect("/admin/products");
   } catch (err) {
     errorCall(err, next);
@@ -181,7 +180,6 @@ exports.postEditProduct = async (req, res, next) => {
     product.title = updatedTitle;
     product.price = updatedPrice;
     product.description = updatedDescription;
-    console.log("Here");
     if (updatedImage) {
       fileHelper.deleteFile(product.imageUrl);
       product.imageUrl = updatedImage.path;

@@ -8,11 +8,11 @@ const PDFDocument = require("pdfkit");
 
 const fs = require("fs");
 
+require("dotenv").config();
+
 const path = require("path");
 
-const stripe = require("stripe")(
-  "sk_test_51RdbpbRdhzRxYrox2Hp55uFZCuz5vm57aC41KVbpYzhh6XJXL0aa38rR461vvL0WeWVQXthdBM7IN27f3pxc3Z3d00PSS9yjkG"
-);
+const stripe = require("stripe")(process.env.STRIPE_KEY);
 
 const ITEMS_PER_PAGE = 2;
 

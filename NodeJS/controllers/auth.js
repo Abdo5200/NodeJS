@@ -67,7 +67,6 @@ exports.postLogin = async (req, res, next) => {
     req.session.user = user;
     req.session.isLoggedIn = true;
     req.session.save((err) => {
-      if (err) console.log("from save ", err);
       res.redirect("/");
     });
   } catch (err) {
@@ -127,7 +126,6 @@ exports.postSignup = async (req, res, next) => {
       subject: "Sign up completed",
       html: "<h1>You successfully signed up!</h1>",
     });
-    console.log("Email sent: ", info);
   } catch (err) {
     errorCall(err, next);
   }
