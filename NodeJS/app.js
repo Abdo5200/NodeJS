@@ -4,8 +4,6 @@ const path = require("path");
 
 const express = require("express");
 
-const https = require("https");
-
 const bodyParser = require("body-parser");
 
 const mongoose = require("mongoose");
@@ -22,9 +20,7 @@ require("dotenv").config();
 
 const errorController = require("./controllers/error");
 
-
 const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.henws.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}?retryWrites=true&w=majority&appName=Cluster0`;
-
 
 require("dotenv").config();
 const store = new MongoDBStore({
@@ -57,10 +53,6 @@ const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 
 const authRoutes = require("./routes/auth");
-
-const privateKey = fs.readFileSync("server.key");
-
-const certificate = fs.readFileSync("-server.cert");
 
 const accessLogStream = fs.createWriteStream(
   path.join(__dirname, "access.log"),
@@ -156,9 +148,6 @@ mongoose
   .connect(MONGODB_URI)
   .then(async (result) => {
     console.log("DB Connected");
-    // https
-    //   .createServer({ key: privateKey, cert: certificate }, app)
-    //   .listen(process.env.PORT || 3000);
     app.listen(process.env.PORT || 3000);
   })
   .catch((err) => {
