@@ -1,6 +1,10 @@
+const fs = require("fs");
+
 const path = require("path");
 
 const express = require("express");
+
+const https = require("https");
 
 const bodyParser = require("body-parser");
 
@@ -9,16 +13,25 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 
 const MongoDBStore = require("connect-mongodb-session")(session);
+
 const csrf = require("csurf");
+
+const compression = require("compression");
+
+require("dotenv").config();
 
 const errorController = require("./controllers/error");
 
-const MONGODB_URI ="";
 
+const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.henws.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}?retryWrites=true&w=majority&appName=Cluster0`;
+
+
+require("dotenv").config();
 const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: "sessions",
 });
+
 const csrfProtection = csrf({});
 
 const flash = require("connect-flash");
@@ -31,6 +44,10 @@ const bcrypt = require("bcryptjs");
 
 const app = express();
 
+const helmet = require("helmet");
+
+const morgan = require("morgan");
+
 app.set("view engine", "ejs");
 
 app.set("views", "views");
@@ -40,6 +57,15 @@ const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 
 const authRoutes = require("./routes/auth");
+
+const privateKey = fs.readFileSync("server.key");
+
+const certificate = fs.readFileSync("-server.cert");
+
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, "access.log"),
+  { flags: "a" }
+);
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -62,6 +88,12 @@ const fileFilter = (req, file, cb) => {
   else cb(null, false);
 };
 
+app.use(helmet());
+
+app.use(compression());
+
+app.use(morgan("combined", { stream: accessLogStream }));
+
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(
@@ -73,7 +105,7 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use(
   session({
-    secret: "my secret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: store,
@@ -124,7 +156,10 @@ mongoose
   .connect(MONGODB_URI)
   .then(async (result) => {
     console.log("DB Connected");
-    app.listen(3000);
+    // https
+    //   .createServer({ key: privateKey, cert: certificate }, app)
+    //   .listen(process.env.PORT || 3000);
+    app.listen(process.env.PORT || 3000);
   })
   .catch((err) => {
     console.log(err);

@@ -1,1 +1,0 @@
-mongodb+srv://abdelrahman_mamdouh:<db_password>@cluster0.henws.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
