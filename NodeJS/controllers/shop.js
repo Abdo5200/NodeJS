@@ -12,7 +12,9 @@ require("dotenv").config();
 
 const path = require("path");
 
+
 const stripe = require("stripe")(process.env.STRIPE_KEY);
+
 
 const ITEMS_PER_PAGE = 2;
 

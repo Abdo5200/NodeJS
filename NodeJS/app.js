@@ -22,7 +22,9 @@ require("dotenv").config();
 
 const errorController = require("./controllers/error");
 
+
 const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.henws.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}?retryWrites=true&w=majority&appName=Cluster0`;
+
 
 require("dotenv").config();
 const store = new MongoDBStore({
